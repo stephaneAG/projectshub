@@ -1,0 +1,100 @@
+<html>
+
+  <body>
+   
+   <h4> see the logs ;p</h4>
+   
+    <script>
+    
+    // the logins hosting repos on github
+var hosts = ['StephanAG', 'SeedsDesign', 'madtoyslab'];
+
+// loop over each host
+hosts.forEach( function (host ){
+  //var hostUrl = 'https://api.github.com/users/'+ host +'/repos';
+  var hostUrl = 'http://api.github.com/users/'+ host +'/repos';
+  // get JSON of hosted repos for host
+  var hostRepos = [];
+  var remoteHostRepos = getStuff(hostUrl, function(remoteRepos){
+    for(var i=0; i < remoteRepos.length; i++){
+      // for further checking stuff & DL/settings stuff, we can get the content of a proj ( or make sure some particular dir / file exist ) by getting the list of the content hosted on the repo
+      var repoContentUrl = remoteRepos[i].url + '/contents';
+      var repoContent = [];
+      var remoteRepoContent = getStuff(repoContentUrl, function(repoCntnt){
+        for(var j=0; i < repoCntnt.length; j++){
+          //console.log( 'content stuff name: ' + repoCntnt[j].name );
+          /*
+          if( repoCntnt[j].type === 'dir' && repoCntnt[j].name === 'proj_infos' ){
+            repoContent.push( repoCntnt[j].name );
+          }
+          */
+        }
+
+        // if 'repoContent[]' is not empty, then we have a dir called 'proj_infos', which may contain thumbs, images, ..
+        // thus, we could set 'default' thumbnails for the projects, and then issue some xhrs to override that
+        // also, if we have more dynamic stuff than just a thumbnail, we could also pick a list of files in an 'images' dir, 'slideshow' dir, or 'videos' dir
+
+        hostRepos.push( { 
+          name: remoteRepos[i].name, 
+          description : remoteRepos[i].description,
+          avatar_url : remoteRepos[i].avatar_url,
+          html_url: remoteRepos[i].html_url,
+          languages_url: remoteRepos[i].languages_url, // the languages used to program/write the stuff
+          url: remoteRepos[i].url, // API url ( just add '/contents' to get the repo's stuff )
+          created_at: remoteRepos[i].created_at, 
+          updated_at: remoteRepos[i].updated_at
+        });
+
+      });
+
+      /*
+      hostRepos.push( { 
+        name: remoteRepos[i].name, 
+        description : remoteRepos[i].description,
+        avatar_url : remoteRepos[i].avatar_url,
+        html_url: remoteRepos[i].html_url,
+        languages_url: remoteRepos[i].languages_url, // the languages used to program/write the stuff
+        url: remoteRepos[i].url, // API url ( just add '/contents' to get the repo's stuff )
+        created_at: remoteRepos[i].created_at, 
+        updated_at: remoteRepos[i].updated_at
+      });
+      */
+    }
+  });
+
+  console.log( hostRepos );
+  window.hostRepos = hostRepos; // debug
+
+  // for each projects hosted, get its name, its html url, and build the API url to it
+  // using the API url, checks if we can find some specific /filetypes/files/dirs in there, depending on what we need
+});
+
+// helper(s)
+function getStuff(addr, callback){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', addr, true);
+  xhr.onreadystatechange = function (aEvt) {
+    if (xhr.readyState == 4) {
+      if(xhr.status == 200){
+        console.log(xhr.responseText);
+            
+        // get an array of the hosted firmwares only ( the remote dir may contain .info, .md or other stuff as well, so we strip anything else that might reside there )
+        var stuff = JSON.parse(xhr.responseText);
+        //console.log(githubFirmwares);
+        //var firmwaresStuff = [];
+        // callback passing a "clean" firmwares array
+        callback(stuff);
+            
+      } else {
+        console.log('Error while downloading stuff from ' + addr + ' !');
+      }
+    }
+  };
+  xhr.send(null);
+}
+    
+    </script>
+  
+  </body>
+
+</html>
