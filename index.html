@@ -1,101 +1,170 @@
 <!DOCTYPE html>
 <html>
 
+  <head>
+    <style>
+      * { padding: 0; margin: 0; }
+      div#projects-container { margin: 0 auto; width: 600px; }
+      div#projects-container div.section { margin-top: 5px; padding-top: 15px; border-top: 1px solid blue; margin-bottom: 10px; }
+      div#projects-container div.section ul { list-style: none; }
+      div#projects-container div.section li { padding: 10px; }
+    </style>
+  </head>
+
   <body>
    
-   <h4> see the logs ;p</h4>
+   <h4> see the logs ;|</h4>
    
     <script type="text/javascript">
     console.log('wtf ?');
     
-    
-    // the logins hosting repos on github
-var hosts = ['StephanAG', 'SeedsDesign', 'madtoyslab'];
 
-// loop over each host
-hosts.forEach( function (host ){
-  //var hostUrl = 'https://api.github.com/users/'+ host +'/repos';
-  var hostUrl = 'http://api.github.com/users/'+ host +'/repos';
-  // get JSON of hosted repos for host
-  var hostRepos = [];
-  var remoteHostRepos = getStuff(hostUrl, function(remoteRepos){
-    for(var i=0; i < remoteRepos.length; i++){
-      // for further checking stuff & DL/settings stuff, we can get the content of a proj ( or make sure some particular dir / file exist ) by getting the list of the content hosted on the repo
-      var repoContentUrl = remoteRepos[i].url + '/contents';
-      var repoContent = [];
-      var remoteRepoContent = getStuff(repoContentUrl, function(repoCntnt){
-        for(var j=0; i < repoCntnt.length; j++){
-          //console.log( 'content stuff name: ' + repoCntnt[j].name );
+    /* -- debug code that gets all the projects' stuff from the below github repos hosts --*/
+    // the logins hosting repos on github
+    var hosts = ['StephaneAG', 'SeedsDesign', 'madtoyslab'];
+    var hostedRepos = [];
+
+    // get the stuff
+    var currHostIdx = 0; // thnk about rewriting stuff ith std loops ..
+    hosts.forEach( function ( host, idx ){ // host ex: stephaneag
+      //var hostedRepos = [];
+      //console.log('current host: ' + host + ' current idx: '+ idx);
+      var hostUrl = 'http://api.github.com/users/'+ host +'/repos?per_page=1000'; // ex: http://api.github.com/users/stephaneag/repos ( R: I know it's supposed to be up to 100, but lest' try .. )
+      // get JSON of hosted repos for host
+      var hostRepos = [];
+      getStuff(hostUrl, function(remoteRepos){
+      //var remoteHostRepos = getStuff(hostUrl, function(remoteRepos){
+        for(var i=0; i < remoteRepos.length; i++){
+          //console.log('current repo is number ' + i + ' on '+ remoteRepos.length + ' items');
+          // for further checking stuff & DL/settings stuff, we can get the content of a proj ( or make sure some particular dir / file exist ) by getting the list of the content hosted on the repo
+          var repoContentUrl = remoteRepos[i].url + '/contents';
+          var repoContent = [];
+          var theRemoteRepo = remoteRepos[i];// seems necessary ?
+          hostRepos.push( { 
+              name: theRemoteRepo.name, //remoteRepos[i].name, 
+              description : theRemoteRepo.description,
+              avatar_url : theRemoteRepo.avatar_url,
+              html_url: theRemoteRepo.html_url,
+              languages_url: theRemoteRepo.languages_url, // the languages used to program/write the stuff
+              url: theRemoteRepo.url, // API url ( just add '/contents' to get the repo's stuff )
+              created_at: theRemoteRepo.created_at, 
+              updated_at: theRemoteRepo.updated_at
+            });
           /*
-          if( repoCntnt[j].type === 'dir' && repoCntnt[j].name === 'proj_infos' ){
-            repoContent.push( repoCntnt[j].name );
-          }
+          var remoteRepoContent = getStuff(repoContentUrl, function(repoCntnt){
+            //for(var j=0; i < repoCntnt.length; j++){
+            //}
+            hostRepos.push( { 
+              name: theRemoteRepo.name, //remoteRepos[i].name, 
+              description : theRemoteRepo.description,
+              avatar_url : theRemoteRepo.avatar_url,
+              html_url: theRemoteRepo.html_url,
+              languages_url: theRemoteRepo.languages_url, // the languages used to program/write the stuff
+              url: theRemoteRepo.url, // API url ( just add '/contents' to get the repo's stuff )
+              created_at: theRemoteRepo.created_at, 
+              updated_at: theRemoteRepo.updated_at
+            });
+          });
           */
+
+          //console.log('current host is number ' + idx + ' on ' + hosts.length + ', and repo is number ' + i + ' on '+ remoteRepos.length + ' items');
+          if( remoteRepos.length-1 === i ) currHostIdx++;
+          console.log('current host is number ' + currHostIdx + ' on ' + hosts.length + ', and repo is number ' + i + ' on '+ remoteRepos.length + ' items');
+          
+          // if it 's the last host, & we're at the last of it repos, we can render our stuff
+          if( remoteRepos.length-1 === currHostIdx && remoteRepos.length-1 === i ) {
+            console.log('THIS SHOULD BE THE LATST STATEMENT: WE CAN NOW BUILD OUR HTML STUFF FROM THE DL-ED STUFF !');
+            //renderHtml();
+            setTimeout(function(){ console.log('deferred loading ..'); renderTheStuff(); /*renderHtml();*/ }, 2000);
+          }
         }
 
-        // if 'repoContent[]' is not empty, then we have a dir called 'proj_infos', which may contain thumbs, images, ..
-        // thus, we could set 'default' thumbnails for the projects, and then issue some xhrs to override that
-        // also, if we have more dynamic stuff than just a thumbnail, we could also pick a list of files in an 'images' dir, 'slideshow' dir, or 'videos' dir
+        // if it 's the last host, & we're at the last of it repos, we can render our stuff
+        //if( remoteRepos.length-1 === i && hosts.length === idx ){//currHostIdx
+        //if( remoteRepos.length-1 === i && hosts.length-1 === currHostIdx ){
+        //  console.log('THIS SHOULD BE THE LATST STATEMENT: WE CAN NOW BUILD OUR HTML STUFF FROM THE DL-ED STUFF !');
+        //}
 
-        hostRepos.push( { 
-          name: remoteRepos[i].name, 
-          description : remoteRepos[i].description,
-          avatar_url : remoteRepos[i].avatar_url,
-          html_url: remoteRepos[i].html_url,
-          languages_url: remoteRepos[i].languages_url, // the languages used to program/write the stuff
-          url: remoteRepos[i].url, // API url ( just add '/contents' to get the repo's stuff )
-          created_at: remoteRepos[i].created_at, 
-          updated_at: remoteRepos[i].updated_at
+        
+      });
+
+      //console.log( hostRepos );
+      //window.hostRepos = hostRepos; // debug
+      hostedRepos.push([host, hostUrl, hostRepos]);
+      window.hostedRepos = hostedRepos;
+      // for each projects hosted, get its name, its html url, and build the API url to it
+      // using the API url, checks if we can find some specific /filetypes/files/dirs in there, depending on what we need
+    });
+
+
+    function getStuff(addr, callback){
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', addr, true);
+      xhr.onreadystatechange = function (aEvt) {
+        if (xhr.readyState == 4) {
+          if(xhr.status == 200){
+            //console.log(xhr.responseText);
+            
+            // get an array of the hosted firmwares only ( the remote dir may contain .info, .md or other stuff as well, so we strip anything else that might reside there )
+            var stuff = JSON.parse(xhr.responseText);
+            //console.log(githubFirmwares);
+            //var firmwaresStuff = [];
+            // callback passing a "clean" firmwares array
+            callback(stuff);
+          } else {
+            console.log('Error while downloading stuff from ' + addr + ' !');
+          }
+        }
+      };
+      xhr.send(null);
+    }
+
+
+    function renderTheStuff(){
+      console.log('rendering html from hosted repos stuff ..');
+      var projectsDiv = document.createElement('div');
+      projectsDiv.id = 'projects-container';
+      // add a section/tab for the different hosts & a corresponding <ul>
+      
+      hostedRepos.forEach(function(host){
+        var hostSection = document.createElement('div');
+        hostSection.classList.add('section');
+        var sectionTitle = document.createElement('h4');
+        sectionTitle.textContent = host[0];
+        hostSection.appendChild(sectionTitle)
+        var hostUl = document.createElement('ul');
+        hostSection.appendChild(hostUl)
+        // add a <li> for each project
+        
+        host[2].forEach(function(projectRepo){
+          var projectLi = document.createElement('li');
+          var projectTitle = document.createElement('h5');
+          projectTitle.textContent = projectRepo.name;
+          projectLi.appendChild(projectTitle);
+          // TODO: add the languages used in the project ( another xhr to issue .. )
+          var projectSubtitle = document.createElement('p');
+          projectSubtitle.textContent = 'last update: ' + projectRepo.updated_at + ' ( created on ' + projectRepo.created_at + ' )';
+          projectLi.appendChild(projectSubtitle);
+          var projectLink = document.createElement('a');
+          projectLink.textContent = 'Got to repo';
+          projectLink.href = projectRepo.html_url;
+          projectLi.appendChild(projectLink);
+          var projectDescription = document.createElement('p');
+          projectDescription.textContent = projectRepo.description;
+          projectLi.appendChild(projectDescription);
+
+          hostUl.appendChild(projectLi);
         });
+        
 
+        projectsDiv.appendChild(hostSection);
       });
-
-      /*
-      hostRepos.push( { 
-        name: remoteRepos[i].name, 
-        description : remoteRepos[i].description,
-        avatar_url : remoteRepos[i].avatar_url,
-        html_url: remoteRepos[i].html_url,
-        languages_url: remoteRepos[i].languages_url, // the languages used to program/write the stuff
-        url: remoteRepos[i].url, // API url ( just add '/contents' to get the repo's stuff )
-        created_at: remoteRepos[i].created_at, 
-        updated_at: remoteRepos[i].updated_at
-      });
-      */
+      
+      
+      // add all that stuff to the page
+      document.body.appendChild(projectsDiv);
     }
-  });
 
-  console.log( hostRepos );
-  window.hostRepos = hostRepos; // debug
-
-  // for each projects hosted, get its name, its html url, and build the API url to it
-  // using the API url, checks if we can find some specific /filetypes/files/dirs in there, depending on what we need
-});
-
-// helper(s)
-function getStuff(addr, callback){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', addr, true);
-  xhr.onreadystatechange = function (aEvt) {
-    if (xhr.readyState == 4) {
-      if(xhr.status == 200){
-        console.log(xhr.responseText);
-            
-        // get an array of the hosted firmwares only ( the remote dir may contain .info, .md or other stuff as well, so we strip anything else that might reside there )
-        var stuff = JSON.parse(xhr.responseText);
-        //console.log(githubFirmwares);
-        //var firmwaresStuff = [];
-        // callback passing a "clean" firmwares array
-        callback(stuff);
-            
-      } else {
-        console.log('Error while downloading stuff from ' + addr + ' !');
-      }
-    }
-  };
-  xhr.send(null);
-}
-    
     </script>
   
   </body>
